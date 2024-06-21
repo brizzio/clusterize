@@ -101,6 +101,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     })
                 }).addTo(drawnItems);
 
+                // Create popup content
+                const popupContent = Object.keys(element.tags).map(tag => `${tag}: ${element.tags[tag]}`).join('<br>');
+
+                // Bind popup to the marker
+                marker.bindPopup(popupContent);
+
                 storeMarkers.push(marker);
             });
 
