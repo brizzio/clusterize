@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Draw Polygon on Leaflet Map</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Map Example</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <style>
-        #map { height: 300px; }
-        #coordinates { margin-top: 10px; }
+        #map1, #map2 {
+            height: 600px;
+            width: 100%;
+            margin-bottom: 20px; /* Space between the maps */
+        }
     </style>
 </head>
 <body>
-    <div id="map"></div>
+    <div id="map1"></div>
+    <div id="map2"></div>
     <div id="coordinates"></div>
-
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-    <script src="script.js"></script>
+    <script src="leafletMap.js" defer ></script>
+    <script src="script.js"></script> <!-- Your JavaScript file -->
 </body>
 </html>
