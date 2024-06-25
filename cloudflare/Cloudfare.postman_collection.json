@@ -1,0 +1,550 @@
+{
+	"info": {
+		"_postman_id": "3b5e5026-9c6d-44fb-8cd2-e2dfdfef94a8",
+		"name": "Cloudfare",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15602022",
+		"_collection_link": "https://duckdevs.postman.co/workspace/WebServiceSQG~67d9c37b-accf-4b5e-8908-a9f70d7fc771/collection/15602022-3b5e5026-9c6d-44fb-8cd2-e2dfdfef94a8?action=share&source=collection_link&creator=15602022"
+	},
+	"item": [
+		{
+			"name": "tunnel",
+			"item": [
+				{
+					"name": "Delete a Cloudflare Tunnel",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel/{{Tunnel ID}}",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"accounts",
+								"{{Account ID}}",
+								"cfd_tunnel",
+								"{{Tunnel ID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clean up Cloudflare Tunnel connections",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel/{{Tunnel ID}}/connections",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"accounts",
+								"{{Account ID}}",
+								"cfd_tunnel",
+								"{{Tunnel ID}}",
+								"connections"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a Cloudflare Tunnel",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel/{{Tunnel ID}}",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"accounts",
+								"{{Account ID}}",
+								"cfd_tunnel",
+								"{{Tunnel ID}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get Cloudflare Tunnel",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel/{{Tunnel ID}}",
+									"protocol": "https",
+									"host": [
+										"api",
+										"cloudflare",
+										"com"
+									],
+									"path": [
+										"client",
+										"v4",
+										"accounts",
+										"{{Account ID}}",
+										"cfd_tunnel",
+										"{{Tunnel ID}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Date",
+									"value": "Mon, 24 Jun 2024 16:16:31 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "CF-Ray",
+									"value": "898e05d2ce1e1b21-GRU"
+								},
+								{
+									"key": "CF-Cache-Status",
+									"value": "DYNAMIC"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "Server",
+									"value": "cloudflare"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"errors\": [],\n    \"messages\": [],\n    \"result\": {\n        \"id\": \"037a0843-0f06-4c64-8ab6-6bf347b093a7\",\n        \"account_tag\": \"c7bd06d3159206baca3e8ceb0632899a\",\n        \"created_at\": \"2024-06-24T16:15:47.708913Z\",\n        \"deleted_at\": null,\n        \"name\": \"dash teste\",\n        \"connections\": [],\n        \"conns_active_at\": null,\n        \"conns_inactive_at\": \"2024-06-24T16:15:47.708913Z\",\n        \"tun_type\": \"cfd_tunnel\",\n        \"metadata\": {},\n        \"status\": \"inactive\",\n        \"remote_config\": true\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get a Cloudflare Tunnel token",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel/{{Tunnel ID}}/token",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"accounts",
+								"{{Account ID}}",
+								"cfd_tunnel",
+								"{{Tunnel ID}}",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Cloudflare Tunnels",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"accounts",
+								"{{Account ID}}",
+								"cfd_tunnel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Cloudflare Tunnel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save the result ID in the variable Tunnel ID if the response status code is 200\r",
+									"pm.test(\"Save the result ID in the variable Tunnel ID if the response status code is 200\", function () {\r",
+									"  if (pm.response.code === 200) {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.collectionVariables.set(\"Tunnel ID\", jsonData.result.id);\r",
+									"  }\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"config_src\": \"cloudflare\",\r\n    \"name\": \"teste\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"accounts",
+								"{{Account ID}}",
+								"cfd_tunnel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get configuration",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel/{{Tunnel ID}}/configurations",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"accounts",
+								"{{Account ID}}",
+								"cfd_tunnel",
+								"{{Tunnel ID}}",
+								"configurations"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get configuration",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel/{{Tunnel ID}}/configurations",
+									"protocol": "https",
+									"host": [
+										"api",
+										"cloudflare",
+										"com"
+									],
+									"path": [
+										"client",
+										"v4",
+										"accounts",
+										"{{Account ID}}",
+										"cfd_tunnel",
+										"{{Tunnel ID}}",
+										"configurations"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Date",
+									"value": "Mon, 24 Jun 2024 16:16:52 GMT"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "CF-Ray",
+									"value": "898e06547ddc1b21-GRU"
+								},
+								{
+									"key": "CF-Cache-Status",
+									"value": "DYNAMIC"
+								},
+								{
+									"key": "Content-Encoding",
+									"value": "gzip"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept-Encoding"
+								},
+								{
+									"key": "Server",
+									"value": "cloudflare"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"errors\": [],\n    \"messages\": [],\n    \"result\": {\n        \"tunnel_id\": \"037a0843-0f06-4c64-8ab6-6bf347b093a7\",\n        \"version\": 1,\n        \"config\": {\n            \"ingress\": [\n                {\n                    \"service\": \"http://lpgdev.local:3000\",\n                    \"hostname\": \"dash.sqgops.store\"\n                },\n                {\n                    \"service\": \"http_status:404\"\n                }\n            ],\n            \"warp-routing\": {\n                \"enabled\": false\n            }\n        },\n        \"source\": \"cloudflare\",\n        \"created_at\": \"2024-06-24T16:16:04.967119Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Put configuration",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"config\": {\r\n        \"ingress\": [\r\n            {\r\n                \"service\": \"http://lpgdev.local:3000\",\r\n                \"hostname\": \"logi.sqgops.store\",\r\n                \"originRequest\": {}\r\n            },\r\n            {\r\n                \"service\": \"http://lpgdev.local:3000\",\r\n                \"hostname\": \"testadormaluco.sqgops.store\",\r\n                \"originRequest\": {}\r\n            },\r\n            {\r\n                \"service\": \"http://lpgdev.local:3000\",\r\n                \"hostname\": \"victor.sqgops.store\",\r\n                \"originRequest\": {}\r\n            },\r\n            {\r\n                \"service\": \"http://lpgdev.local:3000\",\r\n                \"hostname\": \"gabriel.sqgops.store\",\r\n                \"originRequest\": {}\r\n            },\r\n            {\r\n                \"service\": \"http://lpgdev.local:3000\",\r\n                \"hostname\": \"moto.sqgops.store\",\r\n                \"originRequest\": {}\r\n            },\r\n            {\r\n                \"service\": \"http_status:404\"\r\n            }\r\n        ],\r\n        \"warp-routing\": {\r\n            \"enabled\": false\r\n        }\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel/{{Tunnel ID}}/configurations",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"accounts",
+								"{{Account ID}}",
+								"cfd_tunnel",
+								"{{Tunnel ID}}",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Cloudflare Tunnel connections",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/accounts/{{Account ID}}/cfd_tunnel/{{Tunnel ID}}/connections",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"accounts",
+								"{{Account ID}}",
+								"cfd_tunnel",
+								"{{Tunnel ID}}",
+								"connections"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "DNS for Zones",
+			"item": [
+				{
+					"name": "List DNS Records",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/zones/{{Zone ID}}/dns_records",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"zones",
+								"{{Zone ID}}",
+								"dns_records"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create DNS Record",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": \"CNAME\",\r\n    \"proxied\": true,\r\n    \"name\": \"testadormaluco.sqgops.store\",\r\n    \"content\": \"2fc22097-3532-4771-9e1c-39d72e835e08.cfargotunnel.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://api.cloudflare.com/client/v4/zones/{{Zone ID}}/dns_records",
+							"protocol": "https",
+							"host": [
+								"api",
+								"cloudflare",
+								"com"
+							],
+							"path": [
+								"client",
+								"v4",
+								"zones",
+								"{{Zone ID}}",
+								"dns_records"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ValidaTokenAPI",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://api.cloudflare.com/client/v4/user/tokens/verify",
+					"protocol": "https",
+					"host": [
+						"api",
+						"cloudflare",
+						"com"
+					],
+					"path": [
+						"client",
+						"v4",
+						"user",
+						"tokens",
+						"verify"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "Account ID",
+			"value": "c7bd06d3159206baca3e8ceb0632899a"
+		},
+		{
+			"key": "Tunnel ID",
+			"value": ""
+		},
+		{
+			"key": "Zone ID",
+			"value": "9bfbccf3ab74f806af400160d9001ad5"
+		}
+	]
+}
