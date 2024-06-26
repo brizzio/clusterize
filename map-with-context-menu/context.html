@@ -1,52 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Leaflet Context Menu Example</title>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Map with Context Menus</title>
+    <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
-    <style>
-        #map { height: 600px; }
-
-        /* Context menu styles */
-        .context-menu {
-            position: absolute;
-            display: none;
-            background: white;
-            border: 1px solid #ccc;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 10000;
-        }
-
-        .context-menu ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .context-menu li {
-            padding: 8px 12px;
-            cursor: pointer;
-        }
-
-        .context-menu li:hover {
-            background: #f0f0f0;
-        }
-    </style>
 </head>
 <body>
-    <div id="map"></div>
+    <div id="map" style="height: 100vh;"></div>
 
-    <!-- Map Context Menu HTML -->
+    <!-- Context Menu for Map -->
     <div id="context-menu" class="context-menu">
         <ul>
-            <li onclick="map.addMarker()">Add Marker</li>
-            <li onclick="map.startDrawingArea()">Add Area</li>
+            <li onclick="mapInstance.addMarker()">Add Marker</li>
+            <li onclick="mapInstance.startDrawingArea()">Add Area</li>
         </ul>
     </div>
 
-    <!-- Marker Context Menu HTML -->
+    <!-- Context Menu for Marker -->
     <div id="marker-context-menu" class="context-menu">
         <ul>
             <li id="edit-marker">Edit Marker</li>
@@ -54,12 +27,13 @@
         </ul>
     </div>
 
-    <!-- Polygon Context Menu HTML -->
+    <!-- Context Menu for Polygon -->
     <div id="polygon-context-menu" class="context-menu">
         <ul>
-            <li id="edit-polygon">Edit Polygon</li>
-            <li id="delete-polygon">Delete Polygon</li>
+            <li id="edit-polygon">Edit Area</li>
+            <li id="delete-polygon">Delete Area</li>
             <li id="add-marker-to-polygon">Add Marker</li>
+            <li id="search-stores">Search Stores</li>
         </ul>
     </div>
 

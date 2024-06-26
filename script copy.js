@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
    
 
     // Initialize the FeatureGroup to store drawn layers
-    //const drawnItems = new L.FeatureGroup();
-    //map.addLayer();
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer();
 
     // Initialize the draw control and pass it the FeatureGroup of editable layers
     const drawControl = new L.Control.Draw({

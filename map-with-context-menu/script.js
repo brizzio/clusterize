@@ -77,6 +77,64 @@ class PolygonWithContextMenu {
         this.map.markers.push(newMarker);
         this.map.saveMapState();
     }
+
+    searchStores() {
+        const bounds = this.layer.getBounds();
+
+        const latlngs = this.layer.getLatLngs()[0];
+
+        // Calculate bounding box coordinates
+        const lats = latlngs.map(latlng => latlng.lat);
+        const lngs = latlngs.map(latlng => latlng.lng);
+        const minLatbb = Math.min(...lats);
+        const maxLatbb = Math.max(...lats);
+        const minLngbb = Math.min(...lngs);
+        const maxLngbb = Math.max(...lngs);
+        const bbox = [[minLatbb, minLngbb], [maxLatbb, maxLngbb]];
+
+        console.log(bbox)
+
+        const [minLatLng, maxLatLng] = bbox;
+        const [minLat, minLng] = minLatLng;
+        const [maxLat, maxLng] = maxLatLng;
+
+        const overpassQuery = `
+            [out:json][timeout:25];
+            (
+                node["shop"](${minLat},${minLng},${maxLat},${maxLng});
+                way["shop"](${minLat},${minLng},${maxLat},${maxLng});
+                relation["shop"](${minLat},${minLng},${maxLat},${maxLng});
+            );
+            out center;
+        `;
+
+       
+        const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
+
+        fetch(overpassUrl)
+            .then(response => response.json())
+            .then(data => {
+                // Clear existing stores
+                this.stores = [];
+
+                // Process Overpass API response to create MarkerWithContextMenu instances for each store
+                data.elements.forEach(element => {
+                    if (element.type === 'node' || element.type === 'way' || element.type === 'relation') {
+                        const latlng = element && L.latLng(element.lat, element.lon);
+                        const storeMarker = new MarkerWithContextMenu(this.map, latlng, { 
+                            iconUrl: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' 
+                        });
+                        this.stores.push(storeMarker);
+                    }
+                });
+
+                // Save the stores to local storage
+                this.map.saveMapState();
+            })
+            .catch(error => {
+                console.error('Error searching stores:', error);
+            });
+    }
 }
 
 class MapWithContextMenu {
@@ -105,6 +163,7 @@ class MapWithContextMenu {
         document.getElementById('edit-polygon').addEventListener('click', () => this.editPolygon());
         document.getElementById('delete-polygon').addEventListener('click', () => this.deletePolygon());
         document.getElementById('add-marker-to-polygon').addEventListener('click', () => this.addMarkerToPolygon());
+        document.getElementById('search-stores').addEventListener('click', () => this.searchStores());
 
         // Leaflet Draw Control
         this.drawControl = new L.Control.Draw({
@@ -183,12 +242,25 @@ class MapWithContextMenu {
         }
     }
 
+    searchStores() {
+        if (this.selectedPolygon) {
+            this.selectedPolygon.searchStores();
+            this.hideContextMenus();
+        }
+    }
+
     saveMapState() {
         const markersState = this.markers.map(marker => ({
             latlng: marker.latlng,
             options: marker.options
         }));
-        const areasState = this.areas.map(area => area.layer.toGeoJSON());
+        const areasState = this.areas.map(area => ({
+            geojson: area.layer.toGeoJSON(),
+            stores: area.stores && area.stores.map(store => ({
+                latlng: store.latlng,
+                options: store.options
+            }))
+        }));
         localStorage.setItem(this.mapId, JSON.stringify({ markers: markersState, areas: areasState }));
     }
 
@@ -211,8 +283,11 @@ class MapWithContextMenu {
             }
             if (savedMapState.areas) {
                 savedMapState.areas.forEach(areaData => {
-                    const restoredLayer = L.geoJSON(areaData).getLayers()[0];
+                    const restoredLayer = L.geoJSON(areaData.geojson).getLayers()[0];
                     const restoredArea = new PolygonWithContextMenu(this, restoredLayer);
+                    restoredArea.stores = areaData.stores.map(storeData => {
+                        return new MarkerWithContextMenu(this, storeData.latlng, storeData.options);
+                    });
                     this.areas.push(restoredArea);
                     this.map.addLayer(restoredLayer);
                 });
@@ -234,4 +309,5 @@ class MapWithContextMenu {
     }
 }
 
-const map = new MapWithContextMenu('myLeafletMap');
+// Make mapInstance global
+const mapInstance = new MapWithContextMenu('myLeafletMap');
