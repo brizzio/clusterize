@@ -42,11 +42,34 @@ class MarkerWithContextMenu {
 }
 
 class PolygonWithContextMenu {
-    constructor(map, layer) {
+    constructor(map, layer, id, showBoundingBox = true) {
+        console.log('map', map)
+        this.id = id
         this.map = map;
         this.layer = layer;
-
         this.layer.on('contextmenu', (event) => this.showContextMenu(event));
+        if (showBoundingBox) L.rectangle(this.#getBoundingBox(), {color: "#ff7800", weight: 1}).addTo(this.map.map);
+        
+    }
+
+    #getBoundingBox(){
+        const latlngs = this.layer.getLatLngs()[0];
+
+        // Calculate bounding box coordinates
+        const lats = latlngs.map(latlng => latlng.lat);
+        const lngs = latlngs.map(latlng => latlng.lng);
+        const minLatbb = Math.min(...lats);
+        const maxLatbb = Math.max(...lats);
+        const minLngbb = Math.min(...lngs);
+        const maxLngbb = Math.max(...lngs);
+        const bbox = [[minLatbb, minLngbb], [maxLatbb, maxLngbb]];
+
+        console.log(bbox)
+
+        
+
+        return bbox
+
     }
 
     showContextMenu(event) {
@@ -81,18 +104,10 @@ class PolygonWithContextMenu {
     searchStores() {
         const bounds = this.layer.getBounds();
 
-        const latlngs = this.layer.getLatLngs()[0];
+        console.log(bounds)
 
-        // Calculate bounding box coordinates
-        const lats = latlngs.map(latlng => latlng.lat);
-        const lngs = latlngs.map(latlng => latlng.lng);
-        const minLatbb = Math.min(...lats);
-        const maxLatbb = Math.max(...lats);
-        const minLngbb = Math.min(...lngs);
-        const maxLngbb = Math.max(...lngs);
-        const bbox = [[minLatbb, minLngbb], [maxLatbb, maxLngbb]];
+        let bbox = this.#getBoundingBox()
 
-        console.log(bbox)
 
         const [minLatLng, maxLatLng] = bbox;
         const [minLat, minLng] = minLatLng;
@@ -120,9 +135,21 @@ class PolygonWithContextMenu {
                 // Process Overpass API response to create MarkerWithContextMenu instances for each store
                 data.elements.forEach(element => {
                     if (element.type === 'node' || element.type === 'way' || element.type === 'relation') {
-                        const latlng = element && L.latLng(element.lat, element.lon);
+
+                        let lat, lng;
+                        if (element.type === 'node') {
+                            lat = element.lat;
+                            lng = element.lon;
+                        } else if (element.type === 'way' || element.type === 'relation') {
+                            lat = element.center.lat;
+                            lng = element.center.lon;
+                        }
+                        const latlng = L.latLng(lat, lng);
                         const storeMarker = new MarkerWithContextMenu(this.map, latlng, { 
-                            iconUrl: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' 
+                            id:generateUniqueId(),
+                            iconUrl: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+                            type:'store',
+                            info:element.tags 
                         });
                         this.stores.push(storeMarker);
                     }
@@ -161,6 +188,7 @@ class MapWithContextMenu {
 
         // Bind polygon context menu actions
         document.getElementById('edit-polygon').addEventListener('click', () => this.editPolygon());
+        document.getElementById('save').addEventListener('click', () => this.save());
         document.getElementById('delete-polygon').addEventListener('click', () => this.deletePolygon());
         document.getElementById('add-marker-to-polygon').addEventListener('click', () => this.addMarkerToPolygon());
         document.getElementById('search-stores').addEventListener('click', () => this.searchStores());
@@ -178,6 +206,7 @@ class MapWithContextMenu {
         this.map.addControl(this.drawControl);
 
         this.map.on(L.Draw.Event.CREATED, (event) => this.addArea(event));
+        this.map.on(L.Draw.Event.EDITED, () => console.log('edited fired'));
 
         // Restore map state
         this.restoreMapState();
@@ -196,6 +225,10 @@ class MapWithContextMenu {
         document.getElementById('context-menu').style.display = 'none';
         document.getElementById('marker-context-menu').style.display = 'none';
         document.getElementById('polygon-context-menu').style.display = 'none';
+        const contextMenus = document.getElementsByClassName('context-menu');
+        Array.from(contextMenus).forEach(menu => {
+            menu.style.display = 'none';
+        });
     }
 
     addMarker() {
@@ -228,6 +261,17 @@ class MapWithContextMenu {
         }
     }
 
+    save() {
+        if (this.selectedPolygon) {
+            console.log('saving', this.selectedPolygon)
+            this.selectedPolygon=null;
+            this.saveMapState()
+            this.hideContextMenus();
+             // Restore map state
+            this.restoreMapState();
+        }
+    }
+
     deletePolygon() {
         if (this.selectedPolygon) {
             this.selectedPolygon.remove();
@@ -254,7 +298,9 @@ class MapWithContextMenu {
             latlng: marker.latlng,
             options: marker.options
         }));
+        console.log('areas:',this.areas)
         const areasState = this.areas.map(area => ({
+            id:area.id,
             geojson: area.layer.toGeoJSON(),
             stores: area.stores && area.stores.map(store => ({
                 latlng: store.latlng,
@@ -283,10 +329,12 @@ class MapWithContextMenu {
             }
             if (savedMapState.areas) {
                 savedMapState.areas.forEach(areaData => {
+                    const {id} = areaData
                     const restoredLayer = L.geoJSON(areaData.geojson).getLayers()[0];
-                    const restoredArea = new PolygonWithContextMenu(this, restoredLayer);
-                    restoredArea.stores = areaData.stores.map(storeData => {
-                        return new MarkerWithContextMenu(this, storeData.latlng, storeData.options);
+                    const restoredArea = new PolygonWithContextMenu(this, restoredLayer, id);
+                    restoredArea.stores = areaData.stores?.map(storeData => {
+                        //console.log('restoreMapState', storeData)
+                        return new StoreMarker(this, storeData.latlng, storeData.options);
                     });
                     this.areas.push(restoredArea);
                     this.map.addLayer(restoredLayer);
@@ -304,10 +352,18 @@ class MapWithContextMenu {
         const layer = event.layer;
         this.map.addLayer(layer);
         const newArea = new PolygonWithContextMenu(this, layer);
+        newArea.id=Math.round(Math.random()*1000 + 1)
         this.areas.push(newArea);
         this.saveMapState();
     }
 }
 
+function generateUniqueId(identifier = 'id') {
+    const timestamp = Date.now(); // Current timestamp in milliseconds
+    const randomNum = Math.floor(Math.random() * 1000000); // Random number between 0 and 999999
+    return `${identifier}-${timestamp}-${randomNum}`; // Concatenate to form the unique ID
+}
+
 // Make mapInstance global
 const mapInstance = new MapWithContextMenu('myLeafletMap');
+window.mapInstance = mapInstance
