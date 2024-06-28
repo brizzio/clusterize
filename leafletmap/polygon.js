@@ -1,10 +1,10 @@
 class Polygon {
-    constructor(map, latlngs, id, options = {}, showBoundingBox = true) {
+    constructor(map, layer, id, options = {}, showBoundingBox = true, latlngs=[]) {
         console.log('map', map, latlngs)
         this.id = id
         this.mapContext = map;
         this.latlngs = latlngs;
-        this.layer = L.polygon(latlngs, options).addTo(this.mapContext.map);;
+        this.layer = layer//?layer:L.polygon(latlngs, options).addTo(this.mapContext.map);;
         this.selected = false;
         this.stores = [];
 
@@ -12,8 +12,10 @@ class Polygon {
 
         this.layer.on('contextmenu', (event) => {
             console.log(event)
+            this.mapContext.removeContextMenu()
             this.mapContext.selectedPolygon = this
             this.selected = true
+            
             this.showContextMenu(event)
         });
         this.searched = []
@@ -31,7 +33,7 @@ class Polygon {
         return {
             id: this.id,
             map:this.mapContext.id,
-            latlngs:this.latlngs,
+            layer:this.layer,
             selected:this.selected,
             stores:st
 
@@ -39,12 +41,14 @@ class Polygon {
     }
 
     showContextMenu(event) {
+        
+        L.DomEvent.preventDefault(event);
         L.DomEvent.stopPropagation(event);
         
         let left = `${event.containerPoint.x}px`;
         let top = `${event.containerPoint.y}px`;
-
-        this.createMarkerContextMenu(top, left)
+        
+        this.createPolygonContextMenu(top, left)
 
         
         this.mapContext.contextMenuLatLng = event.latlng;
@@ -52,10 +56,11 @@ class Polygon {
     }
 
     createPolygonContextMenu(top, left) {
+       
         // Create the context menu div
         const contextMenu = document.createElement('div');
         contextMenu.id = this.id;
-        contextMenu.className = 'context-menu';
+        contextMenu.className = 'polygon-context-menu';
         
         // Create the unordered list
         const ul = document.createElement('ul');
@@ -103,7 +108,7 @@ class Polygon {
         });
 
         // Add event listener to the select-marker list item
-        selectMarker.addEventListener('click', () => {
+        selectPolygon.addEventListener('click', () => {
             console.log('Select Area clicked');
             //this.mapContext.addSelectedItem(this);
             // Remove menu
@@ -141,14 +146,14 @@ class Polygon {
 
     }
 
-    showContextMenu(event) {
+   /*  showContextMenu(event) {
         L.DomEvent.preventDefault(event);
         const polygonContextMenu = document.getElementById('polygon-context-menu');
         polygonContextMenu.style.left = `${event.containerPoint.x}px`;
         polygonContextMenu.style.top = `${event.containerPoint.y}px`;
         polygonContextMenu.style.display = 'block';
-        this.map.selectedPolygon = this;
-    }
+        this.mapContext.selectedPolygon = this;
+    } */
 
     edit() {
         new L.EditToolbar.Edit(this.map.map, {
@@ -157,7 +162,7 @@ class Polygon {
     }
 
     updateMapAreas(){
-        this.map.areas.map(poly=>{
+        this.mapContext.areas.map(poly=>{
             console.log('poly', poly, this, poly.id == this.id)
             return poly.id == this.id?this:poly
         })
@@ -165,17 +170,17 @@ class Polygon {
     }
 
     remove() {
-        this.map.map.removeLayer(this.layer);
-        this.map.removePolygonFromState(this);
-        this.map.saveMapState();
+        this.mapContext.map.removeLayer(this.layer);
+        this.mapContext.removePolygonFromState(this);
+        this.mapContext.saveMapState();
     }
 
     addMarker() {
         const bounds = this.layer.getBounds();
         const center = bounds.getCenter();
-        const newMarker = new MarkerWithContextMenu(this.map, center);
-        this.map.markers.push(newMarker);
-        this.map.saveMapState();
+        const newMarker = new Marker(this.map, center);
+        this.markers.push(newMarker);
+        
     }
 
     searchStores() {
@@ -242,11 +247,11 @@ class Polygon {
 
     addContextMenuStyles() {
         // Check if the style tag already exists
-        if (!document.getElementById('context-menu-styles')) {
+        if (!document.getElementById('polygon-context-menu-styles')) {
             const style = document.createElement('style');
-            style.id = 'store-context-menu-styles';
+            style.id = 'polygon-context-menu-styles';
             style.innerHTML = `
-                .store-context-menu {
+                .polygon-context-menu {
                     position: absolute;
                     display: none;
                     background: white;
@@ -254,18 +259,18 @@ class Polygon {
                     z-index: 1000;
                 }
 
-                .store-context-menu ul {
+                .polygon-context-menu ul {
                     list-style: none;
                     margin: 0;
                     padding: 0;
                 }
 
-                .store-context-menu li {
+                .polygon-context-menu li {
                     padding: 8px 12px;
                     cursor: pointer;
                 }
 
-                .store-context-menu li:hover {
+                .polygon-context-menu li:hover {
                     background: #eee;
                 }
             `;

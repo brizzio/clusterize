@@ -47,13 +47,7 @@ class PolygonWithContextMenu {
         this.id = id
         this.map = map;
         this.layer = layer;
-        this.selected = false;
-        this.layer.on('contextmenu', (event) => {
-            this.map.selectedPolygon = this
-            this.selected = true
-            this.showContextMenu(event)
-        });
-        this.searched = []
+        this.layer.on('contextmenu', (event) => this.showContextMenu(event));
         if (showBoundingBox) L.rectangle(this.#getBoundingBox(), {color: "#ff7800", weight: 1}).addTo(this.map.map);
         
     }
@@ -91,14 +85,6 @@ class PolygonWithContextMenu {
         new L.EditToolbar.Edit(this.map.map, {
             featureGroup: L.featureGroup([this.layer])
         }).enable();
-    }
-
-    updateMapAreas(){
-        this.map.areas.map(poly=>{
-            console.log('poly', poly, this, poly.id == this.id)
-            return poly.id == this.id?this:poly
-        })
-        console.log('update map areas', this.map.areas)
     }
 
     remove() {
@@ -168,7 +154,6 @@ class PolygonWithContextMenu {
                 });
 
                 // Save the stores to local storage
-                this.updateMapAreas();
                 this.map.saveMapState();
             })
             .catch(error => {
@@ -313,11 +298,15 @@ class MapWithContextMenu {
             options: marker.options
         }));
         console.log('areas:',this.areas)
-       
-        localStorage.setItem(this.mapId, JSON.stringify({ markers: markersState, areas: this.areas }));
-    
-    
-    
+        const areasState = this.areas.map(area => ({
+            id:area.id,
+            geojson: area.layer.toGeoJSON(),
+            stores: area.stores && area.stores.map(store => ({
+                latlng: store.latlng,
+                options: store.options
+            }))
+        }));
+        localStorage.setItem(this.mapId, JSON.stringify({ markers: markersState, areas: areasState }));
     }
 
     removeMarkerFromState(markerToRemove) {
@@ -339,15 +328,15 @@ class MapWithContextMenu {
             }
             if (savedMapState.areas) {
                 savedMapState.areas.forEach(areaData => {
-                    const {id, latlngs} = areaData
-                    //const restoredLayer = L.geoJSON(areaData.geojson).getLayers()[0];
-                    const restoredArea = new Polygon(this, latlngs, id, { color: 'green' });
+                    const {id} = areaData
+                    const restoredLayer = L.geoJSON(areaData.geojson).getLayers()[0];
+                    const restoredArea = new PolygonWithContextMenu(this, restoredLayer, id);
                     restoredArea.stores = areaData.stores?.map(storeData => {
                         //console.log('restoreMapState', storeData)
                         return new StoreMarker(this, storeData.latlng, storeData.options);
                     });
                     this.areas.push(restoredArea);
-                    //this.map.addLayer(restoredLayer);
+                    this.map.addLayer(restoredLayer);
                 });
             }
         }
@@ -359,21 +348,14 @@ class MapWithContextMenu {
     }
 
     addArea(event) {
-       // console.log('add area', event.layer.getLatLngs()[0])
         const layer = event.layer;
-        const latlngs = event.layer.getLatLngs()[0].map((v)=>{
-            let lat = v.lat
-            let lng = v.lng
-            return [lat, lng]
-        },[])
-        console.log('add area latlngs', latlngs)
-        const id=Math.round(Math.random()*1000 + 1)
-        const newArea = new Polygon(this, latlngs, id, { color: 'blue' });
-        //this.map.addLayer(layer);
-        //const newArea = new PolygonWithContextMenu(this, layer);
-        this.areas.push({id,latlngs,stores:[]});
-        this.selectedPolygon = newArea
+        this.map.addLayer(layer);
+        const newArea = new PolygonWithContextMenu(this, layer);
+        newArea.id=Math.round(Math.random()*1000 + 1)
+        this.areas.push(newArea);
         this.saveMapState();
+        this.restoreMapState();
+
     }
 }
 
