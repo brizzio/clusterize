@@ -1,5 +1,5 @@
 class Map {
-    constructor(mapId) {
+    constructor(mapId, state = {}) {
         this.mapId = mapId;
         this.map = L.map('map').setView([51.505, -0.09], 13);
         this.selectedMarker = null;
@@ -8,6 +8,7 @@ class Map {
         this.areas = [];
         this.selectedItems = [];
         this.contextMenuLatLng = null;
+        this.state = state
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -46,7 +47,29 @@ class Map {
         this.map.on(L.Draw.Event.EDITED, () => console.log('edited fired'));
 
         // Restore map state
-        this.draw();
+        this.restoreMapState();
+    }
+
+    updateMapState(){
+        console.log('markers:',this.markers)
+        const markersState = this.markers.map(marker => ({
+            id:marker.id,
+            name:marker.name,
+            latlng: marker.latlng,
+            options: marker.options,
+            info:marker.info,
+            type:marker.type
+        }));
+        console.log('areas:',this.areas)
+        const areasState = this.areas.map(area => {
+            console.log('area:',area, area.layerData)
+            return{
+            id:area.id,
+            geojson: area.layer.toGeoJSON(),
+            ...area.layerData
+        }});
+        localStorage.setItem(this.mapId, JSON.stringify({ markers: markersState, areas: areasState }))
+
     }
 
     showContextMenu(event) {
@@ -101,6 +124,7 @@ class Map {
             this.addMarker()
             // Remove menu
             this.removeContextMenu();
+            this.updateMapState()
             // Call the deleteMarker function from your MapWithContextMenu class
             if (window.mapWithContextMenuInstance) {
                 window.mapWithContextMenuInstance.deleteMarker();
@@ -221,6 +245,41 @@ class Map {
         //this.restoreMapState()
     }
 
+    restoreMapState() {
+        
+        const savedMapState = JSON.parse(localStorage.getItem(this.mapId));
+        if (savedMapState) {
+            this.clearMap()
+            if (savedMapState.markers) {
+                savedMapState.markers.forEach(markerData => {
+                    const restoredMarker = new Marker(
+                        this, 
+                        markerData.latlng,
+                        markerData.id, 
+                        markerData.name,
+                        markerData.options,
+                        markerData.info,
+                    );
+                    this.markers.push(restoredMarker);
+                    //this.map.addLayer(restoredMarker);
+                });
+            }
+            /* if (savedMapState.areas) {
+                savedMapState.areas.forEach(areaData => {
+                    const {id} = areaData
+                    const restoredLayer = L.geoJSON(areaData.geojson).getLayers()[0];
+                    const restoredArea = new PolygonWithContextMenu(this, restoredLayer, id);
+                    restoredArea.stores = areaData.stores?.map(storeData => {
+                        console.log('restoreMapState', storeData)
+                        return new StoreMarker(this, storeData.latlng, storeData.options);
+                    });
+                    //this.areas.push(restoredArea);
+                    this.map.addLayer(restoredLayer);
+                }); */
+            }
+        
+    } 
+
     removeMarkerFromState(markerToRemove) {
         this.markers = this.markers.filter(marker => marker !== markerToRemove);
     }
@@ -308,7 +367,8 @@ class Map {
         const newArea = new Polygon(this, layer,id);
         this.areas.push(newArea);
         //this.saveMapState();
-        this.draw();
+        //this.draw();
+        this.updateMapState()
 
     }
 }

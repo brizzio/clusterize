@@ -1,17 +1,20 @@
-class Marker{
-    constructor(mapContext, latlng, options = {}) {
+class Marker {
+    constructor(mapContext, latlng, id, name='', options = {}, info={}) {
         this.mapContext = mapContext;
         this.latlng = latlng;
         this.options = options;
-        this.id = options.id
-        this.marker = this.draw()
-        this.type = 'store'
-        
-        this.addContextMenuStyles(); // inject the CSS styles
+        this.id = id || Date.now();
+        this.name = name  // Default name if not provided
+        this.marker = null
+        this.type = 'other';
+        this.popupContent='';
+        this.info=info
 
+        this.addContextMenuStyles(); // inject the CSS styles
+        this.draw()
         this.marker.on('contextmenu', (event) => {
-            this.mapContext.hideContextMenus()
-            this.showContextMenu(event)
+            this.mapContext.hideContextMenus();
+            this.showContextMenu(event);
         });
 
         this.marker.on('click', () => {
@@ -20,12 +23,18 @@ class Marker{
         });
     }
 
-    draw(){
-        const opt = this.options
-        const id = opt.id
-        const type = opt.type
-        const info = opt.info
-        const icon = opt.iconUrl || 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
+    draw() {
+
+        const opt = this.options;
+        const name = this.name;
+        const id = opt.id;
+        const type = opt.type;
+        const info = opt.info;
+        const icon = opt.iconUrl || 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
+        
+
+        if(this.marker) this.mapContext.map.removeLayer(this.marker);
+        
         const marker = L.marker(this.latlng, {
             icon: L.icon({
                 iconUrl: icon,
@@ -36,31 +45,29 @@ class Marker{
 
         // Create popup content
         //const popupContent = Object.keys(info).map(tag => `${tag}: ${info[tag]}`).join('<br>');
-        const popupContent = 'pop up content'
+        const popupContent = name?name:'pop up content';
 
-       // Create a popup with options
-       const popupOptions = {
-        autoPan: true,
-        offset: L.point(0, -16), // Adjust the value to move the popup above the marker
-        autoPanPaddingTopLeft: L.point(0, 50)
-    };
+        // Create a popup with options
+        const popupOptions = {
+            autoPan: true,
+            offset: L.point(0, -16), // Adjust the value to move the popup above the marker
+            autoPanPaddingTopLeft: L.point(0, 50)
+        };
 
         // Bind popup to the marker
         marker.bindPopup(popupContent, popupOptions);
 
-        return marker
-
+        this.marker = marker;
     }
 
     showContextMenu(event) {
         L.DomEvent.stopPropagation(event);
-        
+
         let left = `${event.containerPoint.x}px`;
         let top = `${event.containerPoint.y}px`;
 
-        this.createMarkerContextMenu(top, left)
+        this.createMarkerContextMenu(top, left);
 
-        
         this.mapContext.contextMenuLatLng = event.latlng;
         this.mapContext.selectedMarker = this;
     }
@@ -70,15 +77,15 @@ class Marker{
         const contextMenu = document.createElement('div');
         contextMenu.id = this.id;
         contextMenu.className = 'marker-context-menu';
-        
+
         // Create the unordered list
         const ul = document.createElement('ul');
-        
+
         // Create the list items
         const editMarker = document.createElement('li');
         editMarker.id = 'edit-marker';
         editMarker.innerText = 'Edit Marker';
-        
+
         const deleteMarker = document.createElement('li');
         deleteMarker.id = 'delete-marker';
         deleteMarker.innerText = 'Delete Marker';
@@ -86,12 +93,12 @@ class Marker{
         const selectMarker = document.createElement('li');
         selectMarker.id = 'select-marker';
         selectMarker.innerText = 'Select Marker';
-        
+
         // Append list items to the unordered list
         ul.appendChild(editMarker);
         ul.appendChild(deleteMarker);
         ul.appendChild(selectMarker);
-        
+
         // Append the unordered list to the context menu div
         contextMenu.appendChild(ul);
 
@@ -99,52 +106,56 @@ class Marker{
         contextMenu.style.left = left;
         contextMenu.style.top = top;
         contextMenu.style.display = 'block';
-        
+
         // Append the context menu div to the body
         document.body.appendChild(contextMenu);
 
         // Add event listener to the edit-marker list item
         editMarker.addEventListener('click', () => {
-            // Define the function to execute when delete-marker is clicked
             console.log('Edit marker clicked');
-            
+            this.showEditForm(); // Show the edit form when edit-marker is clicked
+
             // Remove menu
             this.removeContextMenu();
-            // Call the deleteMarker function from your MapWithContextMenu class
-            if (window.mapWithContextMenuInstance) {
-                window.mapWithContextMenuInstance.editMarker();
-            }
         });
 
         // Add event listener to the delete-marker list item
         deleteMarker.addEventListener('click', () => {
-            // Define the function to execute when delete-marker is clicked
             console.log('Delete marker clicked');
             this.remove();
+
             // Remove menu
             this.removeContextMenu();
-            // Call the deleteMarker function from your MapWithContextMenu class
-            if (window.mapWithContextMenuInstance) {
-                window.mapWithContextMenuInstance.deleteMarker();
-            }
         });
 
         // Add event listener to the select-marker list item
         selectMarker.addEventListener('click', () => {
             console.log('Select marker clicked');
             this.mapContext.selectedMarker = this;
+
             // Remove menu
             this.removeContextMenu();
-             // Call the selectMarker function from your class
-             if (window.mapWithContextMenuInstance) {
-                window.mapWithContextMenuInstance.selectMarker();
-            }
         });
     }
 
-    edit() {
-        // Implement marker editing logic here
+    showEditForm() {
+        const editForm = new EditForm(
+            (name) => {
+                this.updateName(name);
+            },
+            () => {
+                console.log('Edit form canceled');
+            }
+        );
+
+        editForm.show(this.name);
     }
+
+    updateName(name) {
+        this.name = name;
+        this.mapContext.updateMapState();
+    }
+   
 
     removeContextMenu() {
         const element = document.getElementById(this.id);
@@ -162,10 +173,9 @@ class Marker{
     }
 
     addContextMenuStyles() {
-        // Check if the style tag already exists
         if (!document.getElementById('context-menu-styles')) {
             const style = document.createElement('style');
-            style.id = 'marker-context-menu-styles';
+            style.id = 'context-menu-styles';
             style.innerHTML = `
                 .marker-context-menu {
                     position: absolute;
