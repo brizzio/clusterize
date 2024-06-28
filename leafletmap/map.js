@@ -1,4 +1,4 @@
-class MapWithContextMenu {
+class Map {
     constructor(mapId) {
         this.mapId = mapId;
         this.map = L.map('map').setView([51.505, -0.09], 13);
@@ -17,7 +17,7 @@ class MapWithContextMenu {
         this.addContextMenuStyles();
 
         this.map.on('contextmenu', (event) => this.showContextMenu(event));
-        this.map.on('click', () => this.removeContextMenu());
+        this.map.on('click', () => this.hideContextMenus());
 
        /*  // Bind marker context menu actions
         document.getElementById('edit-marker').addEventListener('click', () => this.editMarker());
@@ -54,13 +54,13 @@ class MapWithContextMenu {
         L.DomEvent.stopPropagation(event);
         let left = `${event.containerPoint.x}px`;
         let top = `${event.containerPoint.y}px`;
-
+        this.hideContextMenus()
         this.createMapContextMenu(top, left)
         this.contextMenuLatLng = event.latlng;
     }
 
     createMapContextMenu(top, left) {
-        this.removeContextMenu();
+        
         // Create the context menu div
         const contextMenu = document.createElement('div');
         contextMenu.id = 'map-context-menu';
@@ -163,13 +163,19 @@ class MapWithContextMenu {
     }
 
     hideContextMenus() {
-        document.getElementById('context-menu').style.display = 'none';
-        document.getElementById('marker-context-menu').style.display = 'none';
-        document.getElementById('polygon-context-menu').style.display = 'none';
-        const contextMenus = document.getElementsByClassName('context-menu');
-        Array.from(contextMenus).forEach(menu => {
-            menu.style.display = 'none';
-        });
+        
+            // Select all elements in the document
+            const elements = document.querySelectorAll('*');
+        
+             // Loop through each element
+            elements.forEach(element => {
+                // Ensure the className is a string before checking if it includes 'context'
+                if (typeof element.className === 'string' && element.className.includes('context')) {
+                    // Remove the element from the DOM
+                    element.remove();
+                }
+            });
+    
     }
 
     addMarker() {

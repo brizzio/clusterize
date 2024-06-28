@@ -12,10 +12,10 @@ class Polygon {
 
         this.layer.on('contextmenu', (event) => {
             console.log(event)
-            this.mapContext.removeContextMenu()
+            this.mapContext.hideContextMenus()
             this.mapContext.selectedPolygon = this
             this.selected = true
-            
+
             this.showContextMenu(event)
         });
         this.searched = []

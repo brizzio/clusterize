@@ -10,7 +10,7 @@ class Marker{
         this.addContextMenuStyles(); // inject the CSS styles
 
         this.marker.on('contextmenu', (event) => {
-            this.removeContextMenu();
+            this.mapContext.hideContextMenus()
             this.showContextMenu(event)
         });
 

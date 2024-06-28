@@ -186,5 +186,5 @@ function generateUniqueId(identifier = 'id') {
 }
 
 // Make mapInstance global
-const mapInstance = new MapWithContextMenu('myLeafletMap');
-window.mapInstance = mapInstance
+const MAP = new Map('myLeafletMap');
+window.mapInstance = MAP
