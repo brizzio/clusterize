@@ -1,134 +1,120 @@
 class Polygon {
-    constructor(map, layer, id, options = {}, showBoundingBox = true, latlngs=[]) {
+    constructor(map, latlngs, id, name = '', options, showBoundingBox = true, stores, markers) {
         console.log('map', map, latlngs)
         this.id = id
+        this.name = name || 'AR' + id
         this.mapContext = map;
-        this.latlngs = latlngs;
-        this.layer = layer//?layer:L.polygon(latlngs, options).addTo(this.mapContext.map);;
+        this.latlngs = latlngs || null;
+        this.boundingBoxLayer = null
         this.selected = false;
-        this.stores = [];
-
-        this.addContextMenuStyles(); // inject the CSS styles
-
-        this.layer.on('contextmenu', (event) => {
-            console.log(event)
-            this.mapContext.hideContextMenus()
-            this.mapContext.selectedPolygon = this
-            this.selected = true
-
-            this.showContextMenu(event)
-        });
+        this.stores = stores || [];
+        this.options = options ||  {color: "green", weight: 1}
         this.searched = []
-        if (showBoundingBox) L.rectangle(this.#getBoundingBox(), {color: "#ff7800", weight: 1}).addTo(this.mapContext.map);
-        this.mapContext.map.addLayer(this.layer)
+        this.showBoundingBox=showBoundingBox
+        this.markers=markers || []
+
+        this.polygon = L.polygon(this.latlngs, this.options)
+
+        if (this.showBoundingBox) {
+            this.boundingBoxLayer = L.rectangle(this.#getBoundingBox(), {color: "#ff7800", weight: 1}).addTo(this.mapContext.map);
+        }
+
+        this.contextMenu = new ContextMenu([
+            { id: 'edit-polygon', text: 'Edit Area', onClick: this.editPolygon.bind(this) },
+            { id: 'select-polygon', text: 'Select Area', onClick: this.selectPolygon.bind(this) },
+            { id: 'add-marker-to-polygon', text: 'Add Marker', onClick: this.addMarker.bind(this)},
+            { id: 'search-stores', text: 'Search Stores', onClick: this.searchStores.bind(this)},
+            { id: 'delete-polygon', text: 'Delete Area', onClick: this.deletePolygon.bind(this) },
+        
+        ]);
+
+        this.polygon.on('contextmenu', (event) => {
+            this.mapContext.hideContextMenus();
+            this.showContextMenu(event);
+        });
+
+        this.polygon.on('click', () => {
+            this.mapContext.selectedPolygon = this;
+            this.contextMenu.removeContextMenu();
+        });
+        
+        this.mapContext.map.addLayer(this.polygon)
     }
+
+    showContextMenu(event) {
+        L.DomEvent.stopPropagation(event);
+        
+        const left = `${event.containerPoint.x}px`;
+        const top = `${event.containerPoint.y}px`;
+
+        this.contextMenu.createContextMenu(top, left);
+    }
+
+    editPolygon() {
+        console.log('Edit Polygon clicked');
+        // Implement the edit logic here
+        new L.EditToolbar.Edit(this.mapContext.map, {
+            featureGroup: L.featureGroup([this.polygon])
+        }).enable();
+        this.contextMenu.removeContextMenu();
+    }
+
+    deletePolygon() {
+        console.log('Delete Polygon clicked');
+        this.mapContext.map.removeLayer(this.polygon);
+        if(this.boundingBoxLayer) this.mapContext.map.removeLayer(this.boundingBoxLayer);
+        this.mapContext.selectedPolygon = null;
+        this.mapContext.removePolygonFromState(this);
+
+        this.mapContext.saveMapState();
+        // Implement additional delete logic here
+        this.contextMenu.removeContextMenu();
+    }
+
+    selectPolygon() {
+        console.log('Select Polygon clicked');
+        this.mapContext.selectedPolygon = this;
+        // Implement additional select logic here
+        this.contextMenu.removeContextMenu();
+    }
+
+    addMarker() {
+        console.log('Add Marker to area clicked');
+        const bounds = this.layer.getBounds();
+        const center = bounds.getCenter();
+        const newMarker = new Marker(this.mapContext, center);
+        this.markers.push(newMarker);
+        this.contextMenu.removeContextMenu();
+        
+    }
+
 
     static parse(area){
 
-        let st = this.stores.map(store => ({
+        let st = area.stores.map(store => ({
             latlng: store.latlng,
             options: store.options
         }))
 
+        let mk = area.markers.map(marker => ({
+            latlng: marker.latlng,
+            options: marker.options
+        }))
+
         return {
-            id: this.id,
-            map:this.mapContext.id,
-            layer:this.layer,
-            selected:this.selected,
-            stores:st
+            id: area.id,
+            map:area.mapContext.id,
+            layer:area.layer,
+            selected:area.selected,
+            stores:st,
+            markers:mk
 
         }
     }
 
-    showContextMenu(event) {
-        
-        L.DomEvent.preventDefault(event);
-        L.DomEvent.stopPropagation(event);
-        
-        let left = `${event.containerPoint.x}px`;
-        let top = `${event.containerPoint.y}px`;
-        
-        this.createPolygonContextMenu(top, left)
-
-        
-        this.mapContext.contextMenuLatLng = event.latlng;
-        this.mapContext.selectedMarker = this;
-    }
-
-    createPolygonContextMenu(top, left) {
-       
-        // Create the context menu div
-        const contextMenu = document.createElement('div');
-        contextMenu.id = this.id;
-        contextMenu.className = 'polygon-context-menu';
-        
-        // Create the unordered list
-        const ul = document.createElement('ul');
-        
-        // Create the list items
-        const editPolygon = document.createElement('li');
-        editPolygon.id = 'edit-polygon';
-        editPolygon.innerText = 'Edit Area';
-        
-        const deletePolygon = document.createElement('li');
-        deletePolygon.id = 'delete-polygon';
-        deletePolygon.innerText = 'Delete Area';
-
-        const selectPolygon = document.createElement('li');
-        selectPolygon.id = 'select-polygon';
-        selectPolygon.innerText = 'Select Area';
-        
-        // Append list items to the unordered list
-        ul.appendChild(editPolygon);
-        ul.appendChild(deletePolygon);
-        ul.appendChild(selectPolygon);
-        
-        // Append the unordered list to the context menu div
-        contextMenu.appendChild(ul);
-
-        // Position element
-        contextMenu.style.left = left;
-        contextMenu.style.top = top;
-        contextMenu.style.display = 'block';
-        
-        // Append the context menu div to the body
-        document.body.appendChild(contextMenu);
-
-        // Add event listener to the delete-Polygon list item
-        deletePolygon.addEventListener('click', () => {
-            // Define the function to execute when delete-Polygon is clicked
-            console.log('Delete Polygon clicked');
-            this.remove();
-            // Remove menu
-            this.removeContextMenu();
-            // Call the deletePolygon function from your MapWithContextMenu class
-            if (window.mapWithContextMenuInstance) {
-                window.mapWithContextMenuInstance.deletePolygon();
-            }
-        });
-
-        // Add event listener to the select-marker list item
-        selectPolygon.addEventListener('click', () => {
-            console.log('Select Area clicked');
-            //this.mapContext.addSelectedItem(this);
-            // Remove menu
-            this.removeContextMenu();
-        });
-    }
-
-
-    removeContextMenu() {
-        const element = document.getElementById(this.id);
-        if (element) {
-            element.remove();
-        } else {
-            console.warn(`Element with id "${this.id}" not found.`);
-        }
-    }
-
+   
     #getBoundingBox(){
-        const latlngs = this.layer.getLatLngs()[0];
-
+        const latlngs = this.polygon.getLatLngs()[0];
         // Calculate bounding box coordinates
         const lats = latlngs.map(latlng => latlng.lat);
         const lngs = latlngs.map(latlng => latlng.lng);
@@ -137,54 +123,14 @@ class Polygon {
         const minLngbb = Math.min(...lngs);
         const maxLngbb = Math.max(...lngs);
         const bbox = [[minLatbb, minLngbb], [maxLatbb, maxLngbb]];
-
-        console.log(bbox)
-
-        
-
+        //console.log(bbox)
         return bbox
 
     }
 
-   /*  showContextMenu(event) {
-        L.DomEvent.preventDefault(event);
-        const polygonContextMenu = document.getElementById('polygon-context-menu');
-        polygonContextMenu.style.left = `${event.containerPoint.x}px`;
-        polygonContextMenu.style.top = `${event.containerPoint.y}px`;
-        polygonContextMenu.style.display = 'block';
-        this.mapContext.selectedPolygon = this;
-    } */
-
-    edit() {
-        new L.EditToolbar.Edit(this.map.map, {
-            featureGroup: L.featureGroup([this.layer])
-        }).enable();
-    }
-
-    updateMapAreas(){
-        this.mapContext.areas.map(poly=>{
-            console.log('poly', poly, this, poly.id == this.id)
-            return poly.id == this.id?this:poly
-        })
-        console.log('update map areas', this.map.areas)
-    }
-
-    remove() {
-        this.mapContext.map.removeLayer(this.layer);
-        this.mapContext.removePolygonFromState(this);
-        this.mapContext.saveMapState();
-    }
-
-    addMarker() {
-        const bounds = this.layer.getBounds();
-        const center = bounds.getCenter();
-        const newMarker = new Marker(this.map, center);
-        this.markers.push(newMarker);
-        
-    }
-
     searchStores() {
-        const bounds = this.layer.getBounds();
+        console.log('Search Stores clicked');
+        const bounds = this.polygon.getBounds();
 
         console.log(bounds)
 
@@ -226,55 +172,36 @@ class Polygon {
                             lat = element.center.lat;
                             lng = element.center.lon;
                         }
+
+                       
                         const latlng = L.latLng(lat, lng);
-                        const options =  { 
-                            id:generateUniqueId(),
-                            info:element.tags 
+                        let id = generateUniqueId()
+                        let info = element.tags 
+                        let type = info.shop?info.shop:'search-result'
+                        let searchItemData = {
+                            latlng, 
+                            id,
+                            name:'',
+                            info, 
+                            options:{}, 
+                            type
                         }
-                        new StoreMarker(this.map, latlng, options);
-                        this.stores.push({latlng, options});
+                        console.log('element info', info)
+                        StoreMarker.init(this.mapContext, searchItemData);
+                        this.stores.push(searchItemData);
                     }
                 });
 
+                console.log('search', this.stores)
                 // Save the stores to local storage
-                this.updateMapAreas();
-                this.map.saveMapState();
+                //this.map.updateMapAreas();
+                //this.map.saveMapState();
+                this.contextMenu.removeContextMenu();
             })
             .catch(error => {
                 console.error('Error searching stores:', error);
             });
     }
 
-    addContextMenuStyles() {
-        // Check if the style tag already exists
-        if (!document.getElementById('polygon-context-menu-styles')) {
-            const style = document.createElement('style');
-            style.id = 'polygon-context-menu-styles';
-            style.innerHTML = `
-                .polygon-context-menu {
-                    position: absolute;
-                    display: none;
-                    background: white;
-                    border: 1px solid #ccc;
-                    z-index: 1000;
-                }
-
-                .polygon-context-menu ul {
-                    list-style: none;
-                    margin: 0;
-                    padding: 0;
-                }
-
-                .polygon-context-menu li {
-                    padding: 8px 12px;
-                    cursor: pointer;
-                }
-
-                .polygon-context-menu li:hover {
-                    background: #eee;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
+   
 }

@@ -61,12 +61,16 @@ class Map {
             type:marker.type
         }));
         console.log('areas:',this.areas)
+        //geojson: area.layer.toGeoJSON(),
         const areasState = this.areas.map(area => {
             console.log('area:',area, area.layerData)
             return{
             id:area.id,
-            geojson: area.layer.toGeoJSON(),
-            ...area.layerData
+            name:area.name,
+            latlngs:area.latlngs,
+            options:area.options,
+            showBoundingBox:area.showBoundingBox,
+            stores:area.stores
         }});
         localStorage.setItem(this.mapId, JSON.stringify({ markers: markersState, areas: areasState }))
 
@@ -264,21 +268,19 @@ class Map {
                     //this.map.addLayer(restoredMarker);
                 });
             }
-            /* if (savedMapState.areas) {
+             if (savedMapState.areas) {
                 savedMapState.areas.forEach(areaData => {
-                    const {id} = areaData
+                    const {latlngs, id, name, options, showBoundingBox, stores } = areaData
                     const restoredLayer = L.geoJSON(areaData.geojson).getLayers()[0];
-                    const restoredArea = new PolygonWithContextMenu(this, restoredLayer, id);
-                    restoredArea.stores = areaData.stores?.map(storeData => {
-                        console.log('restoreMapState', storeData)
-                        return new StoreMarker(this, storeData.latlng, storeData.options);
-                    });
-                    //this.areas.push(restoredArea);
-                    this.map.addLayer(restoredLayer);
-                }); */
+                    const restoredArea = new Polygon(this,latlngs, id, name, options, showBoundingBox, stores);
+                    this.areas.push(restoredArea);
+                    //this.map.addLayer(restoredLayer);
+                }); 
             }
         
     } 
+
+}
 
     removeMarkerFromState(markerToRemove) {
         this.markers = this.markers.filter(marker => marker !== markerToRemove);
@@ -325,7 +327,7 @@ class Map {
         
     }
 
-    draw() {
+    /* draw() {
         
         this.clearMap()
         this.removeContextMenu()
@@ -353,7 +355,7 @@ class Map {
             });
         }
         
-    }
+    } */
 
     startDrawingArea() {
         new L.Draw.Polygon(this.map).enable();
@@ -362,12 +364,10 @@ class Map {
 
     addArea(event) {
         const layer = event.layer;
-        
+        let latlngs = layer.getLatLngs()[0]
         let id = Math.round(Math.random()*1000 + 1)
-        const newArea = new Polygon(this, layer,id);
+        const newArea = new Polygon(this, latlngs, id);
         this.areas.push(newArea);
-        //this.saveMapState();
-        //this.draw();
         this.updateMapState()
 
     }

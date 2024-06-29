@@ -1,17 +1,44 @@
 class Marker {
-    constructor(mapContext, latlng, id, name='', options = {}, info={}) {
+    constructor(mapContext, latlng, id, name='', iconUrl, options = {}) {
         this.mapContext = mapContext;
-        this.latlng = latlng;
+        this.latlng = latlng || null;
         this.options = options;
         this.id = id || Date.now();
         this.name = name  // Default name if not provided
         this.marker = null
-        this.type = 'other';
-        this.popupContent='';
-        this.info=info
+               
+        this.popupContent= this.id;
+        this.iconUrl=iconUrl || 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
 
         this.addContextMenuStyles(); // inject the CSS styles
-        this.draw()
+        this.create()
+       
+    }
+
+    create() {
+
+        if(!this.latlng) return
+
+        console.log('creating marker', !this.latlng, this.latlng)
+       
+        const icon = this.iconUrl 
+        
+        const marker = L.marker(this.latlng, {
+            icon: L.icon({
+                iconUrl: icon,
+                iconSize: [32, 32],
+                iconAnchor: [16, 32]
+            })
+        })
+
+        // Create popup content
+        //const popupContent = Object.keys(info).map(tag => `${tag}: ${info[tag]}`).join('<br>');
+        //const popupContent = this.generatePopupContent();
+
+       
+
+        this.marker = marker;
+
         this.marker.on('contextmenu', (event) => {
             this.mapContext.hideContextMenus();
             this.showContextMenu(event);
@@ -21,43 +48,34 @@ class Marker {
             this.mapContext.selectedMarker = this;
             this.removeContextMenu();
         });
+
+        
     }
+
+    generatePopupContent() {
+        return this.name?this.name:'pop up content'
+    } 
 
     draw() {
 
-        const opt = this.options;
-        const name = this.name;
-        const id = opt.id;
-        const type = opt.type;
-        const info = opt.info;
-        const icon = opt.iconUrl || 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
-        
+        console.log('drasw marker', !this.marker, this)
+        if(!this.marker) return 
 
-        if(this.marker) this.mapContext.map.removeLayer(this.marker);
-        
-        const marker = L.marker(this.latlng, {
-            icon: L.icon({
-                iconUrl: icon,
-                iconSize: [32, 32],
-                iconAnchor: [16, 32]
-            })
-        }).addTo(this.mapContext.map);
-
-        // Create popup content
-        //const popupContent = Object.keys(info).map(tag => `${tag}: ${info[tag]}`).join('<br>');
-        const popupContent = name?name:'pop up content';
-
-        // Create a popup with options
-        const popupOptions = {
+         // Create a popup with options
+         const popupOptions = {
             autoPan: true,
             offset: L.point(0, -16), // Adjust the value to move the popup above the marker
             autoPanPaddingTopLeft: L.point(0, 50)
         };
 
         // Bind popup to the marker
-        marker.bindPopup(popupContent, popupOptions);
+        this.marker.bindPopup(this.popupContent, popupOptions);
 
-        this.marker = marker;
+        //if(this.marker) this.mapContext.map.removeLayer(this.marker);
+        
+        this.marker.addTo(this.mapContext.map);
+
+        
     }
 
     showContextMenu(event) {
@@ -132,7 +150,7 @@ class Marker {
         selectMarker.addEventListener('click', () => {
             console.log('Select marker clicked');
             this.mapContext.selectedMarker = this;
-
+            console.log('selectedMarker', this)
             // Remove menu
             this.removeContextMenu();
         });
@@ -142,6 +160,7 @@ class Marker {
         const editForm = new EditForm(
             (name) => {
                 this.updateName(name);
+                this.draw()
             },
             () => {
                 console.log('Edit form canceled');
