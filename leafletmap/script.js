@@ -20,9 +20,42 @@ const retailMap = (latlngs)=>{
 
     const retailMap = new Map('retailMap', latlngs)
 
+    // Function to show the headquarter form
+   const showHeadquarterForm = () => {
+        console.log('Button clicked');
+        const keys = ['street', 'number', 'city', 'state'];
+        const saveFunction = (formData) => {
+            console.log('Form Data:', formData);
+            retailMap.addHeadquarter('900 Av. Paulista, São Paulo, SP');
+        };
+        const dynamicForm = new DynamicForm(
+            (name) => {
+                this.updateName(name);
+            },
+            () => {
+                console.log('Edit form canceled');
+            }
+        );
+        dynamicForm.show('teste');
+        console.log('Form rendered');
+    }; 
+
+    function showEditForm() {
+        const editForm = new EditForm(
+            (name) => {
+                this.updateName(name);
+            },
+            () => {
+                console.log('Edit form canceled');
+            }
+        );
+
+        editForm.show('teste');
+    }
+
     // Define buttons and actions
     const buttons = [
-        { text: 'Matriz', onClick: () => retailMap.addHeadquarter('900 Av. Paulista, São Paulo, SP') },
+        { text: 'Matriz', onClick: () => showHeadquarterForm() },
         { text: 'Button 2', onClick: () => alert('Button 2 clicked') },
         { text: 'Button 3', onClick: () => alert('Button 3 clicked') },
         { text: 'Button 4', onClick: () => alert('Button 4 clicked') }
@@ -30,6 +63,8 @@ const retailMap = (latlngs)=>{
 
     // Add the custom control to the map
     retailMap.map.addControl(new CustomControl(buttons, { position: 'topleft' }));
+
+   
 
     window.mapInstance = retailMap
 
