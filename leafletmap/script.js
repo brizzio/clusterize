@@ -22,7 +22,7 @@ const retailMap = (latlngs)=>{
 
     // Define buttons and actions
     const buttons = [
-        { text: 'Button 1', onClick: () => alert('Button 1 clicked') },
+        { text: 'Matriz', onClick: () => retailMap.addHeadquarter('900 Av. Paulista, São Paulo, SP') },
         { text: 'Button 2', onClick: () => alert('Button 2 clicked') },
         { text: 'Button 3', onClick: () => alert('Button 3 clicked') },
         { text: 'Button 4', onClick: () => alert('Button 4 clicked') }

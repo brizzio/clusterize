@@ -72,6 +72,46 @@ class Map {
         
     }
 
+    addHeadquarter(address) {
+
+       this.getLatLongFromAddress(address)
+        .then(result => {
+            if (result) {
+                console.log(`Latitude: ${result.lat}, Longitude: ${result.lon}`);
+                let latlngs = L.latLng(result.lat, result.lon)
+                const newMarker = new Marker(this,latlngs);
+                this.markers.push(newMarker);
+                newMarker.draw()
+                //this.saveMapState();
+            } else {
+                console.log('Address not found');
+            }
+        });
+        
+        
+        
+    }
+
+    async getLatLongFromAddress(address) {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+    
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                const { lat, lon } = data[0];
+                return { lat: parseFloat(lat), lon: parseFloat(lon) };
+            } else {
+                throw new Error('No results found');
+            }
+        } catch (error) {
+            console.error('Error fetching the geocoding data:', error);
+            return null;
+        }
+    }
+
+
     startDrawingArea() {
         new L.Draw.Polygon(this.map).enable();
         this.contextMenu.removeContextMenu();
