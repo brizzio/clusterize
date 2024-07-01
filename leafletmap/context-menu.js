@@ -82,4 +82,21 @@ class ContextMenu {
             styleElement.remove();
         }
     }
+
+    hideContextMenus() {
+        
+        // Select all elements in the document
+        const elements = document.querySelectorAll('*');
+    
+         // Loop through each element
+        elements.forEach(element => {
+            // Ensure the className is a string before checking if it includes 'context'
+            if (typeof element.className === 'string' && element.className.includes('context')) {
+                // Remove the element from the DOM
+                element.remove();
+            }
+        });
+
+}
+
 }

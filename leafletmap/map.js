@@ -1,7 +1,8 @@
 class Map {
-    constructor(mapId, state = {}) {
+     constructor(mapId, latlngs, state = {}) {
         this.mapId = mapId;
-        this.map = L.map('map').setView([51.505, -0.09], 13);
+        this.latlngs = latlngs || [51.505, -0.09]
+        //this.zoom = zoom || 10
         this.selectedMarker = null;
         this.selectedPolygon = null;
         this.markers = [];
@@ -10,27 +11,30 @@ class Map {
         this.contextMenuLatLng = null;
         this.state = state
 
+        this.map = L.map('map', {
+            zoomControl: false // Disable the default zoom control
+        }).setView(this.latlngs,10);
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap contributors'
         }).addTo(this.map);
 
-        this.addContextMenuStyles();
+        this.contextMenu = new ContextMenu([
+            { id: 'add-marker', text: 'Add Marker', onClick: this.addMarker.bind(this) },
+            { id: 'add-area', text: 'Add Area', onClick: this.startDrawingArea.bind(this) },        
+        ]);
 
-        this.map.on('contextmenu', (event) => this.showContextMenu(event));
-        this.map.on('click', () => this.hideContextMenus());
+        this.map.on('contextmenu', (event) => {
+            this.contextMenuLatLng = event.latlng;
+            this.contextMenu.hideContextMenus();
+            this.showContextMenu(event)
+        });
 
-       /*  // Bind marker context menu actions
-        document.getElementById('edit-marker').addEventListener('click', () => this.editMarker());
-        document.getElementById('delete-marker').addEventListener('click', () => this.deleteMarker());
+        this.map.on('click', () => this.contextMenu.hideContextMenus());
 
-        // Bind polygon context menu actions
-        document.getElementById('edit-polygon').addEventListener('click', () => this.editPolygon());
-        document.getElementById('save').addEventListener('click', () => this.save());
-        document.getElementById('delete-polygon').addEventListener('click', () => this.deletePolygon());
-        document.getElementById('add-marker-to-polygon').addEventListener('click', () => this.addMarkerToPolygon());
-        document.getElementById('search-stores').addEventListener('click', () => this.searchStores());
- */
+       
+      
         /* // Leaflet Draw Control
         this.drawControl = new L.Control.Draw({
             draw: {
@@ -48,6 +52,40 @@ class Map {
 
         // Restore map state
         this.restoreMapState();
+    }
+
+    showContextMenu(event) {
+        L.DomEvent.preventDefault(event);
+        L.DomEvent.stopPropagation(event);
+        let left = `${event.containerPoint.x}px`;
+        let top = `${event.containerPoint.y}px`;
+        this.contextMenu.createContextMenu(top, left);
+    }
+
+    addMarker() {
+    
+        const newMarker = new Marker(this, this.contextMenuLatLng);
+        this.markers.push(newMarker);
+        this.contextMenu.removeContextMenu();
+        newMarker.draw()
+        //this.saveMapState();
+        
+    }
+
+    startDrawingArea() {
+        new L.Draw.Polygon(this.map).enable();
+        this.contextMenu.removeContextMenu();
+        
+    }
+
+    addArea(event) {
+        const layer = event.layer;
+        let latlngs = layer.getLatLngs()[0]
+        let id = Math.round(Math.random()*1000 + 1)
+        const newArea = new Polygon(this, latlngs, id);
+        this.areas.push(newArea);
+        this.updateMapState()
+
     }
 
     updateMapState(){
@@ -76,147 +114,6 @@ class Map {
 
     }
 
-    showContextMenu(event) {
-        L.DomEvent.preventDefault(event);
-        L.DomEvent.stopPropagation(event);
-        let left = `${event.containerPoint.x}px`;
-        let top = `${event.containerPoint.y}px`;
-        this.hideContextMenus()
-        this.createMapContextMenu(top, left)
-        this.contextMenuLatLng = event.latlng;
-    }
-
-    createMapContextMenu(top, left) {
-        
-        // Create the context menu div
-        const contextMenu = document.createElement('div');
-        contextMenu.id = 'map-context-menu';
-        contextMenu.className = 'map-context-menu';
-        
-        // Create the unordered list
-        const ul = document.createElement('ul');
-        
-        // Create the list items
-        const addMarker = document.createElement('li');
-        addMarker.id = 'add-marker';
-        addMarker.innerText = 'Add Marker';
-        
-        const addArea = document.createElement('li');
-        addArea.id = 'add-area';
-        addArea.innerText = 'Add Area';
-
-      
-        // Append list items to the unordered list
-        ul.appendChild(addMarker);
-        ul.appendChild(addArea);
-            
-        // Append the unordered list to the context menu div
-        contextMenu.appendChild(ul);
-
-        // Position element
-        contextMenu.style.left = left;
-        contextMenu.style.top = top;
-        contextMenu.style.display = 'block';
-        
-        // Append the context menu div to the body
-        document.body.appendChild(contextMenu);
-
-        // Add event listener to the delete-marker list item
-        addMarker.addEventListener('click', () => {
-            // Define the function to execute when delete-marker is clicked
-            console.log('Add marker clicked');
-            this.addMarker()
-            // Remove menu
-            this.removeContextMenu();
-            this.updateMapState()
-            // Call the deleteMarker function from your MapWithContextMenu class
-            if (window.mapWithContextMenuInstance) {
-                window.mapWithContextMenuInstance.deleteMarker();
-            }
-        });
-
-        // Add event listener to the add area item
-        addArea.addEventListener('click', () => {
-            console.log('add area clicked');
-            this.startDrawingArea()
-            // Remove menu
-            this.removeContextMenu();
-        });
-    }
-
-    removeContextMenu() {
-        const contextMenus = document.getElementsByClassName("map-context-menu");
-        Array.from(contextMenus).forEach(menu => {
-            menu.remove();
-        });
-       /*  const element = document.getElementById("map-context-menu");
-        if (element) {
-            element.remove();
-        } else {
-            console.warn(`Element with id "map-context-menu" not found.`);
-        } */
-    }
-
-    addContextMenuStyles() {
-        // Check if the style tag already exists
-        if (!document.getElementById('map-menu-styles')) {
-            const style = document.createElement('style');
-            style.id = 'map-context-menu-styles';
-            style.innerHTML = `
-                .map-context-menu {
-                    position: absolute;
-                    display: none;
-                    background: white;
-                    border: 1px solid #ccc;
-                    z-index: 1000;
-                }
-
-                .map-context-menu ul {
-                    list-style: none;
-                    margin: 0;
-                    padding: 0;
-                }
-
-                .map-context-menu li {
-                    padding: 8px 12px;
-                    cursor: pointer;
-                }
-
-                .map-context-menu li:hover {
-                    background: #eee;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }
-
-    hideContextMenus() {
-        
-            // Select all elements in the document
-            const elements = document.querySelectorAll('*');
-        
-             // Loop through each element
-            elements.forEach(element => {
-                // Ensure the className is a string before checking if it includes 'context'
-                if (typeof element.className === 'string' && element.className.includes('context')) {
-                    // Remove the element from the DOM
-                    element.remove();
-                }
-            });
-    
-    }
-
-    addMarker() {
-        if (this.contextMenuLatLng) {
-            const newMarker = new Marker(this, this.contextMenuLatLng);
-            this.markers.push(newMarker);
-            this.saveMapState();
-            //this.hideContextMenus();
-        }
-    }
-
-    
-
     save() {
         if (this.selectedPolygon) {
             console.log('saving', this.selectedPolygon)
@@ -228,9 +125,6 @@ class Map {
         }
     }
 
-    
-
-   
 
     saveMapState() {
         const markersState = this.markers.map(marker => ({
@@ -357,18 +251,7 @@ class Map {
         
     } */
 
-    startDrawingArea() {
-        new L.Draw.Polygon(this.map).enable();
-        
-    }
+    
 
-    addArea(event) {
-        const layer = event.layer;
-        let latlngs = layer.getLatLngs()[0]
-        let id = Math.round(Math.random()*1000 + 1)
-        const newArea = new Polygon(this, latlngs, id);
-        this.areas.push(newArea);
-        this.updateMapState()
-
-    }
+    
 }

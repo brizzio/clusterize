@@ -19,6 +19,19 @@ class StoreMarker extends Marker {
         console.log('init store', data)
         let store = new StoreMarker(map, latlng,id,name,options,info,type)
         console.log('init store METOD END', store)
+        return store
+    }
+
+    parse(){
+        return {
+            latlng:this.latlng, 
+            id:this.id, 
+            name:this.name, 
+            options:this.options, 
+            info:this.info, 
+            type:this.type,
+            shop:this.shop
+        }
     }
 
     

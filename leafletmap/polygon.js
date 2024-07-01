@@ -29,7 +29,7 @@ class Polygon {
         ]);
 
         this.polygon.on('contextmenu', (event) => {
-            this.mapContext.hideContextMenus();
+            this.contextMenu.hideContextMenus();
             this.showContextMenu(event);
         });
 
@@ -39,6 +39,41 @@ class Polygon {
         });
         
         this.mapContext.map.addLayer(this.polygon)
+    }
+
+    static createFromObject(mapContext, areaObject){
+        let latlngs = areaObject.latlngs
+        let id = areaObject.id
+        let name = areaObject.name || ''
+        let options = areaObject.options
+        let showBoundingBox = areaObject.showBoundingBox
+        let markers = areaObject.markers
+        let stores = []
+        if (areaObject.stores.length){
+            areaObject.stores.map(s=>{
+                let store =  StoreMarker.init(
+                    s.latlng, 
+                    s.id, 
+                    s.name, 
+                    s.options, 
+                    s.info, 
+                    s.type
+                )
+                store.shop = s.shop
+                return store
+            })
+        }
+        
+        new Polygon(
+            mapContext, 
+            latlngs, 
+            id, 
+            name, 
+            options, 
+            showBoundingBox = true, 
+            stores, 
+            markers)
+
     }
 
     showContextMenu(event) {
@@ -75,6 +110,7 @@ class Polygon {
         console.log('Select Polygon clicked');
         this.mapContext.selectedPolygon = this;
         // Implement additional select logic here
+        console.log('parsed', this.parse(this))
         this.contextMenu.removeContextMenu();
     }
 
@@ -89,23 +125,20 @@ class Polygon {
     }
 
 
-    static parse(area){
+    parse(){
 
-        let st = area.stores.map(store => ({
-            latlng: store.latlng,
-            options: store.options
-        }))
+        let st = this.stores.map(store =>store.parse())
 
-        let mk = area.markers.map(marker => ({
+        let mk = this.markers.map(marker => ({
             latlng: marker.latlng,
             options: marker.options
         }))
 
         return {
-            id: area.id,
-            map:area.mapContext.id,
-            layer:area.layer,
-            selected:area.selected,
+            id: this.id,
+            map:this.mapContext.id,
+            layer:this.polygon,
+            selected:this.selected,
             stores:st,
             markers:mk
 
@@ -187,8 +220,8 @@ class Polygon {
                             type
                         }
                         console.log('element info', info)
-                        StoreMarker.init(this.mapContext, searchItemData);
-                        this.stores.push(searchItemData);
+                        let store = StoreMarker.init(this.mapContext, searchItemData);
+                        this.stores.push(store);
                     }
                 });
 
