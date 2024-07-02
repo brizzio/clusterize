@@ -5,7 +5,7 @@ class DynamicForm {
         this.#addStyles(); // Inject CSS styles
     }
 
-    show(currentName) {
+    show(fields) {
         // Create overlay
         this.overlay = document.createElement('div');
         this.overlay.className = 'overlay';
@@ -15,17 +15,29 @@ class DynamicForm {
         this.form = document.createElement('div');
         this.form.className = 'dynamic-form';
 
-        // Create input field
-        this.input = document.createElement('input');
-        this.input.type = 'text';
-        this.input.value = currentName;
-        this.form.appendChild(this.input);
+        fields.forEach(field => {
+            // Create label
+            const label = document.createElement('label');
+            label.innerText = field.label;
+            this.form.appendChild(label);
+
+            // Create input field
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = field.field;
+            input.placeholder = field.placeholder;
+            this.form.appendChild(input);
+        });
 
         // Create save button
         const saveButton = document.createElement('button');
         saveButton.innerText = 'Save';
         saveButton.addEventListener('click', () => {
-            this.onSave(this.input.value);
+            const formData = {};
+            fields.forEach(field => {
+                formData[field.field] = this.form.querySelector(`[name=${field.field}]`).value;
+            });
+            this.onSave(formData);
             this.hide();
         });
         this.form.appendChild(saveButton);
@@ -68,6 +80,11 @@ class DynamicForm {
                     z-index: 1001;
                 }
 
+                .dynamic-form label {
+                    display: block;
+                    margin-bottom: 5px;
+                }
+
                 .dynamic-form input {
                     display: block;
                     margin-bottom: 10px;
@@ -87,7 +104,7 @@ class DynamicForm {
                     left: 0;
                     width: 100%;
                     height: 100%;
-                    background: rgba(0, 0, 0, 0.2);
+                    background: rgba(0, 0, 0, 0.5);
                     z-index: 1000;
                 }
             `;

@@ -23,20 +23,25 @@ const retailMap = (latlngs)=>{
     // Function to show the headquarter form
    const showHeadquarterForm = () => {
         console.log('Button clicked');
-        const keys = ['street', 'number', 'city', 'state'];
-        const saveFunction = (formData) => {
+        const inputs = [
+            { field: 'street', label: 'Logradouro', placeholder: 'Nome da rua / av' },
+            { field: 'number', label: 'Numero', placeholder: 'Numero do endereço' },
+            { field: 'number-complement', label: 'Complemento', placeholder: 'Ex.: Casa 3' },
+            { field: 'city', label: 'Cidade', placeholder: 'nome da cidade' },
+            { field: 'state', label: 'UF', placeholder: 'sigla da UF' }
+        ];
+        
+        const onSave = (formData) => {
             console.log('Form Data:', formData);
-            retailMap.addHeadquarter('900 Av. Paulista, São Paulo, SP');
+            const search = `${formData.number} ${formData.street}, ${formData.city}, ${formData.state}`
+            retailMap.addHeadquarter(search);
         };
-        const dynamicForm = new DynamicForm(
-            (name) => {
-                this.updateName(name);
-            },
-            () => {
-                console.log('Edit form canceled');
-            }
-        );
-        dynamicForm.show('teste');
+
+        const onCancel = () => {
+            console.log('Form cancelled');
+        };
+        const form = new DynamicForm(onSave, onCancel);
+        form.show(inputs);
         console.log('Form rendered');
     }; 
 
